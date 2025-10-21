@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" type="./img/ico.ico" href="./img/ico.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alan+Sans:wght@300..900&display=swap" rel="stylesheet">
+    <title>Lottery God's Zone</title>
+</head>
+
+<body>
+    <div class="container">
+        <img class="logo" src="./img/black.png" alt="">
+        <h1><span class="span">God's Zone</span> <br>Lottery</h1>
+        <div class="grid" id="grid"></div>
+        <div id="controls">
+            <button id="restart">Почати заново</button>
+        </div>
+    </div>
+
+    <!-- Оверлей -->
+    <div id="overlay"></div>
+
+    <script>
+        const totalCells = 72;   // всего ячеек
+        const winCount = 10;     // число выигрышных
+        let found = 0;           // найденные крестики
+        let overlayTimeout = null;
+
+        const winSound = new Audio('./sound/9f3d770d1446e6c.mp3');
+        const loseSound = new Audio('./sound/cartoon-fail.mp3')
+        const grid = document.getElementById("grid");
+        const restartBtn = document.getElementById("restart");
+        const overlay = document.getElementById("overlay");
+
+        // Перемешивание массива
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Показ оверлея
+        function showOverlay(result) {
+            if (overlayTimeout) clearTimeout(overlayTimeout);
+            overlay.style.display = "flex";
+            overlay.className = "";
+            if (result === "win") {
+                overlay.classList.add("win");
+                overlay.textContent = "WIN";
+            } else {
+                overlay.classList.add("lose");
+                overlay.textContent = "LOSE";
+            }
+            overlayTimeout = setTimeout(() => {
+                overlay.style.display = "none";
+            }, 1500);
+        }
+
+        // Новая игра
+        function startGame() {
+            grid.innerHTML = "";
+            overlay.style.display = "none";
+            found = 0;
+
+            // массив выигрышей
+            const cells = Array(totalCells).fill(false);
+            for (let i = 0; i < winCount; i++) cells[i] = true;
+            shuffle(cells);
+
+            // создаём клетки
+            for (let num = 1; num <= totalCells; num++) {
+                const isWin = cells[num - 1];
+                const div = document.createElement("div");
+                div.className = "cell";
+                div.textContent = num;
+                div.addEventListener("click", () => {
+                    if (div.classList.contains("opened")) return;
+
+                    div.classList.add("opened");
+                    if (isWin) {
+                        div.classList.add("win");
+                        div.textContent = ""; // убираем текст
+                        const img = document.createElement("img");
+                        img.src = "./img/black.png"; // путь к картинке выигрыша
+                        img.style.width = "80%";
+                        img.style.height = "100%";
+                        div.appendChild(img);
+
+                        found++;
+
+                        winSound.currentTime = 0; // сбросить на начало
+                        winSound.play();
+
+                        showOverlay("win");
+                    } else {
+                        div.classList.add("lose");
+                        div.textContent = "";
+
+                        loseSound.currentTime = 0;
+                        loseSound.play();
+
+                        showOverlay("lose");
+                    }
+                });
+                grid.appendChild(div);
+            }
+        }
+
+        restartBtn.addEventListener("click", startGame);
+        startGame();
+    </script>
+</body>
+
+</html>
